@@ -5,37 +5,39 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
 var cors = require('cors');
-var passport = require('passport');
+
 require('dotenv').config();
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var loginRouter = require('./routes/login/localAuth');
+var loginRouter = require('./routes/login/auth');
 var app = express();
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 app.set('trust proxy', 1); // trust first proxy
+
 app.use(
-  session({
-    secret: 'keyboard cat',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: true },
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
   }),
 );
-app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+// app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));
-app.use(passport.initialize());
-app.use(passport.session());
+// app.use(
+//   session({
+//     name: 'sessionId',
+//     secret: 'keyboard cat',
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: { secure: false, sameSite: 'none', httpOnly: true },
+//   }),
+// );
 
 app.use('/', indexRouter);
 
@@ -45,7 +47,16 @@ app.use('/login', loginRouter);
 app.use(function (req, res, next) {
   next(createError(404));
 });
-
+app.use((req, res, next) => {
+  res.header('Access-control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', true);
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
+    return res.status(200).json({});
+  }
+  next();
+});
 // error handler
 app.use(function (err, req, res, next) {
   // set locals, only providing error in development

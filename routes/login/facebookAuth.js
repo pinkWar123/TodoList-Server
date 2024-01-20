@@ -1,30 +1,58 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-var FacebookStrategy = require('facebook-strategy').Strategy;
+var FacebookStrategy = require('passport-facebook').Strategy;
 
 passport.use(
   new FacebookStrategy(
     {
-      clientId: process.env.CLIENT_ID,
+      clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,
-      callbackUrl: process.env.CALLBACK_URL,
+      callbackURL: process.env.CALLBACK_URL,
+      profileFields: ['id', 'name', 'picture.type(large)', 'emails', 'displayName', 'about', 'gender'],
     },
     (accessToken, refreshToken, profile, cb) => {
-      console.log(profile);
-      return cb(null, profile);
+      process.nextTick(() => {
+        console.log('accessToken: ' + accessToken);
+        console.log('refreshToken: ' + refreshToken);
+        return cb(null, profile);
+      });
     },
   ),
 );
 
-router.get('/', (req, res, next) => {
-  passport.authenticate('facebook');
+router.get('/success', (req, res) => {
+  console.log('session1:', req.user);
+  // if (req.session.passport.user) {
+  //   res.status(200).json({
+  //     success: true,
+  //     message: 'success',
+  //     user: req.session.user,
+  //   });
+  // }
 });
 
-router.get('/callback', (req, res, next) => {
-  passport.authenticate('facebook', { failureRedirect: '/login' }, (req, res, next) => {
-    res.redirect('/');
+router.get('/failed', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'failure',
   });
+});
+
+router.get('/', passport.authenticate('facebook', { scope: 'email' }));
+
+router.get(
+  '/callback',
+  passport.authenticate('facebook', { failureRedirect: '/login/failed', successRedirect: 'http://localhost:3000' }),
+  function (req, res) {
+    console.log('session:', req.session);
+    res.redirect('http://localhost:3000');
+  },
+);
+
+router.get('/home', (req, res, next) => {
+  console.log(req);
+  res.json(req.session.passport.user);
 });
 
 module.exports = router;

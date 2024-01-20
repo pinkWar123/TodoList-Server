@@ -3,12 +3,18 @@ const Schema = mongoose.Schema;
 
 mongoose.connect('mongodb://localhost/Todo');
 
-const accountSchema = new Schema({
+const accountSchema = new Schema(
+  {
     username: String,
-    password: String
-} , {
-    collection: 'Account'
-})
+    password: String,
+    name: String,
+    provider: String,
+    socialId: String,
+  },
+  {
+    collection: 'Account',
+  },
+);
 
 const AccountModel = mongoose.model('account', accountSchema);
 
