@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const AccountModel = require('../../models/account');
+const generateTokens = require('../../utils/generateTokens');
 
 router.post('/', async (req, res, next) => {
   try {
@@ -30,22 +31,19 @@ router.post('/', async (req, res, next) => {
 
 router.post('/social', async (req, res, next) => {
   const { socialId, name, provider } = req.body;
-
   try {
+    let response = {};
     const data = await AccountModel.findOne({ socialId, provider });
     if (data) {
-      return res.status(200).json({ message: 'success', data });
+      response = data;
+    } else {
+      response = await AccountModel.create({
+        name,
+        provider,
+        socialId,
+      });
     }
-    const response = await AccountModel.create({
-      name,
-      provider,
-      socialId,
-    });
-    console.log('response');
-    const token = jwt.sign({ _id: response._id }, process.env.SECRET_KEY, { expiresIn: '1d' });
-    const refreshToken = jwt.sign({ _id: response._id }, process.env.SECRET_KEY_REFRESH, {
-      expiresIn: '7d',
-    });
+    const { token, refreshToken } = generateTokens(response);
     return res.status(200).json({
       message: 'Success',
       token,
