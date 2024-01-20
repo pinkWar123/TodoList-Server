@@ -10,7 +10,7 @@ require('dotenv').config();
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var loginRouter = require('./routes/login/auth');
-var signupRouter = require('./routes/login/signup');
+var signupRouter = require('./routes/signup/signup');
 var app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

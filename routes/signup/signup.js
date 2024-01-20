@@ -12,11 +12,13 @@ router.post('/', async (req, res, next) => {
     }
 
     try {
-      const res = await AccountModel.create({
+      const response = await AccountModel.create({
         username,
         password,
-        name: firstName + lastName,
+        name: firstName + ' ' + lastName,
       });
+      if (response) return res.status(200).json({ message: 'Account has successfully been created' });
+      else return res.status(400).json({ message: 'Failed to create account' });
     } catch (err) {
       return res.status(500).json({ message: err.message });
     }
