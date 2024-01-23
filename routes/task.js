@@ -59,4 +59,20 @@ router.post('/', checkLogin, async (req, res) => {
   }
 });
 
+router.delete('/', checkLogin, async (req, res) => {
+  const { _id } = req.data;
+  const { _id: taskId } = req.body;
+
+  try {
+    let response = await TaskModel.deleteOne({ _id: taskId });
+    if (response) {
+      response = await AccountModel.updateOne({ _id }, { $pull: { tasks: taskId } });
+      return res.status(200).json(response);
+    }
+    return res.status(400).json({ message: 'failed' });
+  } catch (error) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
