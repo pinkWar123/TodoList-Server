@@ -8,6 +8,7 @@ const taskSchema = new Schema(
     taskName: String,
     description: String,
     dueDate: Date,
+    comments: [{ type: Schema.ObjectId, ref: 'Comment' }],
   },
   { collection: 'Task' },
 );
