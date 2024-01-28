@@ -4,21 +4,6 @@ const jwt = require('jsonwebtoken');
 const TaskModel = require('../models/task');
 const AccountModel = require('../models/account');
 
-// router.use((req, res, next) => {
-//   const token = req.headers?.authorization.split(' ')[1];
-//   if (!authInfo) {
-//     return res.status(400).json({ message: 'Missing _id in request body' });
-//   }
-//   try {
-//     const userInfo = jwt.verify(token, process.env.SECRET_KEY);
-//     req.user = userInfo;
-//     console.log(userInfo);
-//     return next();
-//   } catch (err) {
-//     return res.status(500).json({ message: err.message });
-//   }
-// });
-
 const checkLogin = (req, res, next) => {
   const token = req.headers.authorization.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'No access token provided' });
@@ -54,6 +39,19 @@ router.post('/', checkLogin, async (req, res) => {
     const { _id: taskId } = newTask;
     const response = await AccountModel.updateOne({ _id }, { $push: { tasks: taskId } });
     if (response) return res.status(200).json(response);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+router.put('/', checkLogin, async (req, res) => {
+  const { _id } = req.data;
+  const { _id: taskId, task } = req.body;
+
+  try {
+    const response = await TaskModel.updateOne({ _id: taskId }, task);
+    if (response) return res.status(200).json(response);
+    else return res.status(404).json();
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
