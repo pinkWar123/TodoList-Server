@@ -12,10 +12,7 @@ router.post('/', async (req, res, next) => {
     console.log(data);
     if (data) {
       if (data.password === password) {
-        const token = jwt.sign({ _id: data._id }, process.env.SECRET_KEY, { expiresIn: process.env.TOKEN_MAX_AGE });
-        const refreshToken = jwt.sign({ _id: data._id }, process.env.SECRET_KEY_REFRESH, {
-          expiresIn: process.env.REFRESH_TOKEN_MAX_AGE,
-        });
+        const { token, refreshToken } = generateTokens(data);
         return res.status(200).json({
           message: 'Success',
           token,
@@ -26,6 +23,25 @@ router.post('/', async (req, res, next) => {
     } else return res.status(401).json({ message: 'Invalid credentials' });
   } catch (err) {
     return res.status(404).json({ message: 'Internal server error' });
+  }
+});
+
+router.post('/refresh', async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(400).json({ message: 'No refresh token found!' });
+    const response = jwt.verify(refreshToken, process.env.SECRET_KEY_REFRESH);
+    const { _id } = response;
+    const user = await AccountModel.findById(_id);
+    const tokens = generateTokens(user);
+    return res.status(200).json({
+      message: 'Success',
+      token: tokens.token,
+      refreshToken: tokens.refreshToken,
+      user,
+    });
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
   }
 });
 

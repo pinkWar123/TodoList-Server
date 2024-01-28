@@ -10,6 +10,7 @@ const accountSchema = new Schema(
     name: String,
     provider: String,
     socialId: String,
+    tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
   },
   {
     collection: 'Account',
