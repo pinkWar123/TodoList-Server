@@ -6,6 +6,7 @@ const commentSchema = new Schema(
   {
     content: String,
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'Account' },
+    authorName: String,
   },
   { collection: 'Comment' },
 );
