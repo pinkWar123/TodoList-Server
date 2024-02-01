@@ -55,3 +55,43 @@ router.put('/', checkLogin, async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 });
+
+router.post('/emoji', checkLogin, async (req, res) => {
+  const { _id } = req.data;
+  const { commentId, emoji } = req.body;
+  try {
+    const comment = await CommentModel.findById(commentId);
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    const emojiList = comment.emojis[emoji];
+    const hasEmojiExisted = emojiList && emojiList.length > 0 && emojiList.some((userId) => userId === _id);
+    if (hasEmojiExisted) {
+      comment.emojis = {
+        ...comment.emojis,
+        [emoji]: emojiList.filter((userId) => userId !== _id),
+      };
+    } else {
+      comment.emojis = {
+        ...comment.emojis,
+        [emoji]: [...(comment.emojis[emoji] || []), _id],
+      };
+    }
+
+    await comment.save();
+    const result = await CommentModel.updateOne(
+      { _id: commentId, [`emojis.${emoji}`]: { $size: 0 } },
+      { $unset: { [`emojis.${emoji}`]: '' } },
+    );
+    console.log(result);
+    if (result.modifiedCount > 0) {
+      const newComment = await CommentModel.findById(commentId);
+      return res.status(200).json(newComment);
+    }
+    return res.status(200).json(comment);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
