@@ -68,7 +68,47 @@ router.delete('/', checkLogin, async (req, res) => {
       return res.status(200).json(response);
     }
     return res.status(400).json({ message: 'failed' });
-  } catch (error) {
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+router.get('/due', checkLogin, async (req, res) => {
+  const { taskId } = req.query;
+
+  try {
+    const task = await TaskModel.findById(taskId);
+    if (task) {
+      const dueDate = task.dueDate;
+      return res.status(200).json(dueDate);
+    } else return res.status(400).json({ message: 'No comment found' });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+router.post('/due', checkLogin, async (req, res) => {
+  const { taskId, timestamp } = req.body;
+  try {
+    const task = await TaskModel.findById(taskId);
+    if (task) {
+      task.dueDate = timestamp;
+      await task.save();
+      return res.status(200).json();
+    } else return res.status(400).json({ message: 'No comment found' });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+router.delete('/due', checkLogin, async (req, res) => {
+  const { taskId } = req.query;
+  try {
+    const task = await TaskModel.findByIdAndUpdate(taskId, { dueDate: null }, { new: true });
+    if (!task) {
+      return res.status(404).json();
+    } else return res.status(200).json(task);
+  } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 });
