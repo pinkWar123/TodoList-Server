@@ -11,7 +11,7 @@ const commentSchema = new Schema(
       type: Object,
       default: {},
     },
-    createdAt: { type: Date, default: Date.now() },
+    createdAt: { type: Date, default: Date.now },
   },
   { collection: 'Comment' },
 );
