@@ -113,4 +113,27 @@ router.delete('/due', checkLogin, async (req, res) => {
   }
 });
 
+router.get('/priority', checkLogin, async (req, res) => {
+  const { taskId } = req.query;
+  if (!taskId) return res.status(404).json();
+  try {
+    const task = await TaskModel.findById(taskId);
+    if (!task) return res.status(404).json();
+    return res.status(200).json(task.priority);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+router.post('/priority', checkLogin, async (req, res) => {
+  const { taskId, priority } = req.body;
+  try {
+    const task = await TaskModel.findByIdAndUpdate(taskId, { priority });
+    if (!task) return res.status(404).json();
+    return res.status(200).json(task);
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
