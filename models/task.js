@@ -9,6 +9,7 @@ const taskSchema = new Schema(
     description: String,
     dueDate: Date,
     comments: [{ type: Schema.ObjectId, ref: 'Comment' }],
+    priority: { type: Number, default: 4 },
   },
   { collection: 'Task' },
 );
