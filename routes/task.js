@@ -45,13 +45,15 @@ router.post('/', checkLogin, async (req, res) => {
 });
 
 router.put('/', checkLogin, async (req, res) => {
-  const { _id } = req.data;
-  const { _id: taskId, task } = req.body;
+  const { _id, task } = req.body;
 
   try {
-    const response = await TaskModel.updateOne({ _id: taskId }, task);
-    if (response) return res.status(200).json(response);
-    else return res.status(404).json();
+    const oldTask = await TaskModel.findById(_id);
+    console.log(oldTask);
+    oldTask.description = task.description;
+    oldTask.taskName = task.taskName;
+    await oldTask.save();
+    return res.status(200).json();
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
