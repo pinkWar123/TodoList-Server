@@ -17,7 +17,7 @@ const checkLogin = (req, res, next) => {
   }
 };
 
-router.get('/', checkLogin, async (req, res) => {
+const getAllTasks = async (req, res, next) => {
   const { _id } = req.data;
   if (!_id) return res.status(400).json({ message: 'Missing _id in request body' });
 
@@ -25,17 +25,37 @@ router.get('/', checkLogin, async (req, res) => {
     const account = await AccountModel.findById(_id);
     const taskIds = account.tasks;
     const tasks = await TaskModel.find({ _id: { $in: taskIds } });
-    return res.status(200).json(tasks);
+    req.tasks = tasks;
+    next();
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
+};
+
+router.get('/', checkLogin, getAllTasks, async (req, res) => {
+  return res.status(200).json(req.tasks);
+});
+
+const isToday = (ts) => {
+  if (!ts) return true;
+  const now = new Date();
+  const date = new Date(ts);
+  return (
+    now.getFullYear() === date.getFullYear() && now.getMonth() === date.getMonth() && now.getDate() === date.getDate()
+  );
+};
+
+router.get('/today', checkLogin, getAllTasks, async (req, res) => {
+  const { tasks } = req;
+  const todayTasks = tasks.filter((task) => isToday(task.dueDate) && task.status === 0);
+  return res.status(200).json(todayTasks);
 });
 
 router.post('/', checkLogin, async (req, res) => {
   const { _id } = req.data;
-  const { taskName, description } = req.body;
+  const value = req.body;
   try {
-    const newTask = await TaskModel.create({ taskName, description });
+    const newTask = await TaskModel.create(value);
     const { _id: taskId } = newTask;
     const response = await AccountModel.updateOne({ _id }, { $push: { tasks: taskId } });
     if (response) return res.status(200).json(response);
@@ -48,16 +68,19 @@ router.put('/', checkLogin, async (req, res) => {
   const { _id, task } = req.body;
 
   try {
-    const oldTask = await TaskModel.findById(_id);
-    console.log(oldTask);
-    oldTask.description = task.description;
-    oldTask.taskName = task.taskName;
-    await oldTask.save();
-    return res.status(200).json();
+    // const oldTask = await TaskModel.findById(_id);
+    const { taskName, description, dueDate, priority, status } = task;
+    // oldTask.taskName = task.taskName;
+    // await oldTask.save();
+    const response = await TaskModel.updateOne({ _id }, { taskName, description, dueDate, priority, status });
+    if (response) return res.status(200).json();
+    else return res.status(500).json({ message: err.message });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
 });
+
+router.put('/completed');
 
 router.delete('/', checkLogin, async (req, res) => {
   const { _id } = req.data;

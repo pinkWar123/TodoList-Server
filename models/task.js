@@ -10,6 +10,7 @@ const taskSchema = new Schema(
     dueDate: Date,
     comments: [{ type: Schema.ObjectId, ref: 'Comment' }],
     priority: { type: Number, default: 4 },
+    status: { type: Number, default: 0 }, // 0 means incompleted, 1 means completed
   },
   { collection: 'Task' },
 );
