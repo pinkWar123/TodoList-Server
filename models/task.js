@@ -11,9 +11,12 @@ const taskSchema = new Schema(
     comments: [{ type: Schema.ObjectId, ref: 'Comment' }],
     priority: { type: Number, default: 4 },
     status: { type: Number, default: 0 }, // 0 means incompleted, 1 means completed
+    completedAt: Date, //
   },
   { collection: 'Task' },
 );
+
+taskSchema.index({ completedAt: 1 });
 
 const TaskModel = mongoose.model('task', taskSchema);
 

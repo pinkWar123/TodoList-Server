@@ -45,9 +45,20 @@ const isToday = (ts) => {
   );
 };
 
-router.get('/today', checkLogin, getAllTasks, async (req, res) => {
+router.get('/today', checkLogin, getAllTasks, (req, res) => {
   const { tasks } = req;
-  const todayTasks = tasks.filter((task) => isToday(task.dueDate) && task.status === 0);
+  let todayTasks = [];
+  if (Array.isArray(tasks) && tasks.length > 0)
+    todayTasks = tasks.filter((task) => isToday(task.dueDate) && task.status === 0);
+  return res.status(200).json(todayTasks);
+});
+
+router.get('/overdue', checkLogin, getAllTasks, (req, res) => {
+  const { tasks } = req;
+  let todayTasks = [];
+  const now = new Date();
+  if (Array.isArray(tasks) && tasks.length > 0)
+    todayTasks = tasks.filter((task) => task.dueDate < now && task.status === 0);
   return res.status(200).json(todayTasks);
 });
 
@@ -68,10 +79,7 @@ router.put('/', checkLogin, async (req, res) => {
   const { _id, task } = req.body;
 
   try {
-    // const oldTask = await TaskModel.findById(_id);
     const { taskName, description, dueDate, priority, status } = task;
-    // oldTask.taskName = task.taskName;
-    // await oldTask.save();
     const response = await TaskModel.updateOne({ _id }, { taskName, description, dueDate, priority, status });
     if (response) return res.status(200).json();
     else return res.status(500).json({ message: err.message });
@@ -80,7 +88,19 @@ router.put('/', checkLogin, async (req, res) => {
   }
 });
 
-router.put('/completed');
+router.put('/completed', checkLogin, async (req, res) => {
+  const { _id } = req.body;
+  if(!_id) return res.status(404).json({message: 'No task id found'})
+  try {
+    const task = await TaskModel.findById(_id);
+    task.completedAt = new Date();
+    task.status = 1;
+    await task.save();
+    return res.status(200).json();
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
 
 router.delete('/', checkLogin, async (req, res) => {
   const { _id } = req.data;
