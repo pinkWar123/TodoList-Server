@@ -11,6 +11,7 @@ const accountSchema = new Schema(
     provider: String,
     socialId: String,
     tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
+    offset: { type: Number, default: 0 }, // This is the timezone offset. 0 means UTC
   },
   {
     collection: 'Account',
